@@ -20,7 +20,7 @@ export class chartMessage {
         this.content.msg_type = msg.content.msg_type;
         this.content.msg_body = msg.content.msg_body;
 
-        if (msg.content.msg_type === "image") {
+        if (msg.content.msg_type === "image" || msg.content.msg_type === "file") {
             let _this = this;
             store.state.JIM.getResource({"media_id": msg.content.msg_body.media_id}).onSuccess(function (data) {
                 _this.content.media_url = data.url;

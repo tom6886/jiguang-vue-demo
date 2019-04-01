@@ -13,6 +13,10 @@ export class apiService {
         return this.msgCallback(store.state.JIM.sendSinglePic(singlePic), success, error, timeout);
     }
 
+    static sendSingleFile(singleFile, success, error, timeout) {
+        return this.msgCallback(store.state.JIM.sendSingleFile(singleFile), success, error, timeout);
+    }
+
     static callback(obj, ...args) {
         return new Promise((resolve) => {
             if (obj && obj.onSuccess) {

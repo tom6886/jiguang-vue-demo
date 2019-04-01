@@ -11,8 +11,21 @@
                     <div class="chat-panel-message-img-wrap float-right" v-if="item.content.msg_type === 'image'">
                         <img :src="item.content.media_url" title="点击查看大图"/>
                     </div>
+                    <div class="chat-panel-message-file-wrap float-right" v-if="item.content.msg_type === 'file'">
+                        <div class="chat-panel-file-icon">
+                            <div></div>
+                            <p>{{ shortName(item.content.msg_body.fname) }}</p>
+                        </div>
+                        <div class="chat-panel-range">
+                            <div>
+                                <span class="float-left">{{ parseSize(item.content.msg_body.fsize) }}</span>
+                                <span class="float-right chat-panel-download-file"
+                                      @click="downLoadFile(item.content.media_url)">下载文件</span>
+                            </div>
+                        </div>
+                    </div>
                     <div class="chat-panel-msgText-me float-right" v-if="item.content.msg_type === 'text'">
-                        <p>{{ item.content.msg_body.text}}</p>
+                        <p>{{ item.content.msg_body.text }}</p>
                     </div>
                     <div style="clear:right;"></div>
                 </div>
@@ -21,8 +34,21 @@
                     <div class="chat-panel-message-img-wrap float-left" v-if="item.content.msg_type === 'image'">
                         <img :src="item.content.media_url" title="点击查看大图"/>
                     </div>
+                    <div class="chat-panel-message-file-wrap float-left" v-if="item.content.msg_type === 'file'">
+                        <div class="chat-panel-file-icon">
+                            <div></div>
+                            <p>{{ shortName(item.content.msg_body.fname) }}</p>
+                        </div>
+                        <div class="chat-panel-range">
+                            <div>
+                                <span class="float-left">{{ parseSize(item.content.msg_body.fsize) }}</span>
+                                <span class="float-right chat-panel-download-file"
+                                      @click="downLoadFile(item.content.media_url)">下载文件</span>
+                            </div>
+                        </div>
+                    </div>
                     <div class="chat-panel-msgText-other" v-if="item.content.msg_type === 'text'">
-                        <p>{{ item.content.msg_body.text}}</p>
+                        <p>{{ item.content.msg_body.text }}</p>
                     </div>
                     <div style="clear:left;"></div>
                 </div>
@@ -30,9 +56,16 @@
         </div>
         <div class="chart-message">
             <Row class="chart-send-file">
-                <Upload action="/" :before-upload="sendImage" accept="image/*">
-                    <Button icon="ios-cloud-upload-outline"></Button>
-                </Upload>
+                <Col span="2">
+                    <Upload action="/" :before-upload="sendImage" accept="image/*" title="发送图片">
+                        <Button icon="ios-cloud-upload-outline"></Button>
+                    </Upload>
+                </Col>
+                <Col span="2">
+                    <Upload action="/" :before-upload="sendDoc" title="发送文件">
+                        <Button icon="ios-cloud-upload"></Button>
+                    </Upload>
+                </Col>
             </Row>
             <Row class="chart-send-text">
                 <Input type="textarea" v-model="textMsg"/>
@@ -45,6 +78,8 @@
 <script>
     import {apiService} from "../utils/chart-service";
     import {types} from "../utils/mutation-types";
+    import * as download from 'downloadjs';
+    import {FileUtil} from "../utils/util";
 
     export default {
         data() {
@@ -77,15 +112,47 @@
                 this.textMsg = "";
             },
             async sendImage(file) {
+                let fd = new FormData();
+                fd.append(file.name, file);
                 let _msg = {
                     target_username: this.$store.state.currentContact,
-                    image: file,
+                    image: fd,
                     need_receipt: true
                 };
-                console.log(file)
                 let res = await apiService.sendSinglePic(_msg);
                 console.log(res)
+                this.$store.commit(types.ADD_MESSAGE, res);
                 return false;
+            },
+            async sendDoc(file) {
+                console.log(file)
+                let fd = new FormData();
+                fd.append(file.name, file);
+                let _msg = {
+                    target_username: this.$store.state.currentContact,
+                    file: fd,
+                    need_receipt: true
+                };
+                let res = await apiService.sendSingleFile(_msg);
+                console.log(res)
+                this.$store.commit(types.ADD_MESSAGE, res);
+                return false;
+            },
+            shortName(name) {
+                let _arr = name.split(".");
+                let _fname = "";
+                if (_arr[0].length > 6) {
+                    _fname = _arr[0].substr(0, 3) + '...' + _arr[0].substr(_arr[0].length - 2);
+                } else {
+                    _fname = _arr[0];
+                }
+                return _fname + '.' + _arr[1];
+            },
+            parseSize(size) {
+                return FileUtil.parseSize(size);
+            },
+            downLoadFile(url) {
+                download(url);
             }
         }
     }
