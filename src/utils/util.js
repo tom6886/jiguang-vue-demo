@@ -80,4 +80,15 @@ export class FileUtil {
         }
         return newSize;
     }
+
+    static shortName(name) {
+        let _arr = name.split(".");
+        let _fname = "";
+        if (_arr[0].length > 6) {
+            _fname = _arr[0].substr(0, 3) + '...' + _arr[0].substr(_arr[0].length - 2);
+        } else {
+            _fname = _arr[0];
+        }
+        return _fname + '.' + _arr[1];
+    }
 }
