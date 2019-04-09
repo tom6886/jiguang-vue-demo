@@ -47,6 +47,11 @@
                 }
             }
         },
+        created() {
+            if (!this.$store.state.JIM.isInit()) {
+                this.$store.dispatch("initJIM");
+            }
+        },
         methods: {
             beforeLogin() {
                 this.$refs["form"].validate((valid) => {
@@ -62,6 +67,7 @@
                 _this.$store.state.JIM.login(_this.user).onSuccess(function (data) {
                     Cookies.set("accessToken", _this.user);
                     _this.$store.commit(types.SET_MYNAME, _this.user.username);
+                    _this.$store.commit(types.SET_ISLOGIN, true);
                     _this.$store.dispatch("getFriends");
                     router.push({
                         name: "home"

@@ -11,6 +11,7 @@ export default new Vuex.Store({
     state: {
         JIM: null,
         myName: null,
+        isLogin: false,
         hasOffline: false,
         currentContact: null,
         friends: [],
@@ -46,6 +47,9 @@ export default new Vuex.Store({
     mutations: {
         [types.SET_JIM](state, JIM) {
             state.JIM = JIM;
+        },
+        [types.SET_ISLOGIN](state, login) {
+            state.isLogin = login;
         },
         [types.SET_MYNAME](state, name) {
             state.myName = name;
@@ -91,32 +95,40 @@ export default new Vuex.Store({
                 "flag": 1
             }).onSuccess(function (data) {
                 console.log('success:' + JSON.stringify(data));
-                let user = JSON.parse(Cookies.get("accessToken"));
-                if (user && location.pathname !== "/login") {
-                    dispatch("loginJIM", user);
+                if (location.pathname !== "/login") {
+                    dispatch("loginJIM");
                 }
             }).onFail(function (data) {
                 console.log('error:' + JSON.stringify(data))
             });
         },
-        loginJIM({state, commit, dispatch}, user) {
-            Object.assign(user, {is_md5: true})
+        loginJIM({state, commit, dispatch}) {
+            let user = JSON.parse(Cookies.get("accessToken"));
+            Object.assign(user, {is_md5: true});
             state.JIM.login(user).onSuccess(function () {
                 commit(types.SET_MYNAME, user.username);
+                commit(types.SET_ISLOGIN, true);
                 dispatch("getFriends");
             }).onFail(function (data) {
-                console.log("loginError" + JSON.stringify(data))
+                console.log("loginError" + JSON.stringify(data));
                 router.push({name: "login"})
             }).onTimeout(function () {
                 router.push({name: "login"})
             });
+        },
+        logOut({state}) {
+            state.JIM.loginOut();
+            Cookies.remove("accessToken");
+            router.push({name: "login"});
         },
         getFriends({state, commit, dispatch}) {
             state.JIM.getFriendList().onSuccess(function (data) {
                 commit(types.SET_FRIENDS, data.friend_list);
                 Promise.all([
                     dispatch("getAllMessage"),
-                    dispatch("listenMessageReceive")
+                    dispatch("listenMessageReceive"),
+                    dispatch("listenDisconnect"),
+                    dispatch("listenOnEventNotification")
                 ])
             });
         },
@@ -136,6 +148,18 @@ export default new Vuex.Store({
             state.JIM.onMsgReceive((data) => {
                 console.log(JSON.stringify(data))
                 data.messages.forEach(x => commit(types.ADD_MESSAGE, x));
+            });
+        },
+        listenDisconnect({state, commit}) {
+            state.JIM.onDisconnect(() => {
+                commit(types.SET_ISLOGIN, false);
+            });
+        },
+        listenOnEventNotification({state, commit}) {
+            state.JIM.onEventNotification((data) => {
+                if (data.event_type === 1) {
+                    commit(types.SET_ISLOGIN, false);
+                }
             });
         }
     }

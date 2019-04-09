@@ -1,5 +1,6 @@
 export const types = {
     SET_JIM: "setJIM",
+    SET_ISLOGIN: "setIsLogin",
     SET_MYNAME: "setMyName",
     SET_FRIENDS: "setFriends",
     SET_CURRENT_CONTACT: "setCurrentContact",

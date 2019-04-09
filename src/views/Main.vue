@@ -24,6 +24,18 @@
                 </Layout>
             </Layout>
         </Layout>
+        <Modal id="main-tips"
+               v-model="!$store.state.isLogin"
+               title="提示"
+               :closable="false"
+               :mask-closable="false"
+               width="450">
+            <p>网络断线，请检查网络或重新登陆</p>
+            <div slot="footer">
+                <Button size="large" @click="logOut">退出</Button>
+                <Button type="info" size="large" @click="reLogin">重新登录</Button>
+            </div>
+        </Modal>
     </div>
 </template>
 
@@ -35,6 +47,14 @@
         components: {
             Contacts,
             ChartWindow
+        },
+        methods: {
+            reLogin() {
+                this.$store.dispatch("initJIM");
+            },
+            logOut() {
+                this.$store.dispatch("logOut");
+            }
         }
     }
 </script>
